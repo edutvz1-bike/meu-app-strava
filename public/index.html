@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eduardo | Cycling Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-icons/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
+
+    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50 px-4 py-4">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-orange-500 text-slate-950 p-2 rounded-xl font-black text-xl tracking-wider">
+                    🚴‍♂️
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight">Eduardo</h1>
+                    <p class="text-xs text-slate-400">Cycling Analytics</p>
+                </div>
+            </div>
+            <span class="flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-xs font-medium">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                Webhook Ativo
+            </span>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-8 space-y-8">
+        
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex items-center justify-between shadow-xl">
+                <div>
+                    <p class="text-sm text-slate-400 font-medium mb-1">Limiar de Potência (FTP)</p>
+                    <h3 class="text-3xl font-black text-orange-500 tracking-tight">258 <span class="text-lg font-normal text-slate-400">Wints</span></h3>
+                </div>
+                <div class="text-slate-700 text-4xl font-bold">⚡</div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex items-center justify-between shadow-xl">
+                <div>
+                    <p class="text-sm text-slate-400 font-medium mb-1">Frequência Cardíaca (FTHR)</p>
+                    <h3 class="text-3xl font-black text-rose-500 tracking-tight">167 <span class="text-lg font-normal text-slate-400">bpm</span></h3>
+                </div>
+                <div class="text-slate-700 text-4xl font-bold">❤️</div>
+            </div>
+        </section>
+
+        <section class="space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold tracking-tight">Últimas Atividades Recebidas</h2>
+                <span class="text-xs text-slate-500">Atualiza automaticamente</span>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
+                <div class="flex justify-between items-start border-b border-slate-800/60 pb-4">
+                    <div>
+                        <span class="bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2.5 py-0.5 rounded-md text-xs font-semibold uppercase tracking-wider mb-2 inline-block">
+                            Aguardando Treino
+                        </span>
+                        <h4 class="text-base font-bold text-slate-200">Seu próximo pedal aparecerá aqui</h4>
+                        <p class="text-xs text-slate-400 mt-1">O circuito com o Strava já está pronto para receber as próximas pedaladas.</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800/40">
+                        <p class="text-xs text-slate-500">Distância</p>
+                        <p class="text-sm font-bold text-slate-400 mt-0.5">-- km</p>
+                    </div>
+                    <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800/40">
+                        <p class="text-xs text-slate-500">Duração</p>
+                        <p class="text-sm font-bold text-slate-400 mt-0.5">--:--</p>
+                    </div>
+                    <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800/40">
+                        <p class="text-xs text-slate-500">Potência Média</p>
+                        <p class="text-sm font-bold text-slate-400 mt-0.5">-- W</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</body>
+</html>
