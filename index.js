@@ -70,7 +70,7 @@ const gerarHtml = (dadosTreino) => `
             </div>
         </section>
 
-       <section class="space-y-4">
+        <section class="space-y-4">
             <h2 class="text-xl font-bold tracking-tight">Gráfico de Carga e Fadiga (Intervals.icu)</h2>
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl overflow-hidden flex justify-center items-center min-h-[250px]">
                 <img src="/api/intervals-chart" alt="Gráfico de Fadiga" class="w-full h-auto rounded-xl max-h-[400px] object-contain">
@@ -95,96 +95,4 @@ const gerarHtml = (dadosTreino) => `
                 <div class="grid grid-cols-3 gap-4 text-center">
                     <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800/40">
                         <p class="text-xs text-slate-500">Distância / Registros</p>
-                        <p class="text-sm font-bold text-slate-200 mt-0.5">${dadosTreino ? dadosTreino.distancia : '--'}</p>
-                    </div>
-                    <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800/40">
-                        <p class="text-xs text-slate-500">Duração</p>
-                        <p class="text-sm font-bold text-slate-200 mt-0.5">${dadosTreino ? dadosTreino.duracao : '--:--'}</p>
-                    </div>
-                    <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800/40">
-                        <p class="text-xs text-slate-500">Esporte Detectado</p>
-                        <p class="text-sm font-bold text-slate-200 mt-0.5">${dadosTreino ? dadosTreino.tipoOriginal : '--'}</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-</body>
-</html>
-`;
-
-app.get('/api/webhook', (req, res) => {
-  const challenge = req.query['hub.challenge'];
-  const verifyToken = req.query['hub.verify_token'];
-  if (verifyToken === 'STRAVA') {
-    return res.status(200).json({ "hub.challenge": challenge });
-  }
-  return res.status(403).send('Token inválido');
-});
-
-app.post('/api/webhook', async (req, res) => {
-  try {
-    const evento = req.body;
-    if (evento.object_type === 'activity' && evento.aspect_type === 'create') {
-      const tipoOriginal = evento.updates?.type || 'Workout'; 
-      const dadosFormatados = {
-        id: evento.object_id,
-        statusEsporte: traduzirEsporte(tipoOriginal),
-        tipoOriginal: tipoOriginal,
-        distancia: tipoOriginal.includes('Ride') ? "10.0 km" : "Frequência OK",
-        duracao: "00:10:00"
-      };
-      if (redis) {
-        await redis.set('ultimo_treino', JSON.stringify(dadosFormatados), { ex: 2592000 });
-      }
-    }
-    return res.status(200).send('EVENT_RECEIVED');
-  } catch (erro) {
-    return res.status(200).send('EVENT_RECEIVED');
-  }
-});
-
-// BUSCA O GRÁFICO DIRETAMENTE NA API DO INTERVALS.ICU
-app.get('/api/intervals-chart', async (req, res) => {
-  try {
-    const userId = process.env.INTERVALS_USER_ID;
-    const apiKey = process.env.INTERVALS_API_KEY;
-
-    if (!userId || !apiKey) {
-      return res.status(400).send('Chaves ausentes.');
-    }
-
-    const auth = Buffer.from(`API_KEY:${apiKey}`).toString('base64');
-    const urlIntervals = `https://intervals.icu/api/v1/athlete/${userId}/fitness-chart.png?days=90&theme=dark`;
-
-    const resposta = await fetch(urlIntervals, {
-      headers: { 'Authorization': `Basic ${auth}` }
-    });
-
-    if (!resposta.ok) throw new Error('Erro na API do Intervals');
-
-    const blob = await resposta.arrayBuffer();
-    res.setHeader('Content-Type', 'image/png');
-    return res.send(Buffer.from(blob));
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send('Erro ao carregar o gráfico.');
-  }
-});
-
-app.get('/', async (req, res) => {
-  try {
-    if (redis) {
-      const treinoGuardado = await redis.get('ultimo_treino');
-      if (treinoGuardado) {
-        const dados = typeof treinoGuardado === 'string' ? JSON.parse(treinoGuardado) : treinoGuardado;
-        return res.send(gerarHtml(dados));
-      }
-    }
-    return res.send(gerarHtml(null));
-  } catch (e) {
-    return res.send(gerarHtml(null));
-  }
-});
-
-module.exports = app;
+                        <p class="text-sm font-bold text-slate-200 mt-0.5">${dadosTreino ? dadosTreino.distancia : '--'}</
