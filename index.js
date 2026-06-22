@@ -2,14 +2,14 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 
-// CÓDIGO DA TELA BONITA (HTML)
+// CÓDIGO DA TELA BONITA EM PORTUGUÊS (HTML)
 const htmlPagina = `
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eduardo | Cycling Dashboard</title>
+    <title>Eduardo | Painel de Ciclismo</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
@@ -19,7 +19,7 @@ const htmlPagina = `
                 <div class="bg-orange-500 text-slate-950 p-2 rounded-xl font-black text-xl">🚴‍♂️</div>
                 <div>
                     <h1 class="text-lg font-bold tracking-tight">Eduardo</h1>
-                    <p class="text-xs text-slate-400">Cycling Analytics</p>
+                    <p class="text-xs text-slate-400">Análise de Ciclismo</p>
                 </div>
             </div>
             <span class="flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-xs font-medium">
@@ -34,14 +34,14 @@ const htmlPagina = `
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex items-center justify-between shadow-xl">
                 <div>
                     <p class="text-sm text-slate-400 font-medium mb-1">Limiar de Potência (FTP)</p>
-                    <h3 class="text-3xl font-black text-orange-500 tracking-tight">258 <span class="text-lg font-normal text-slate-400">W</span></h3>
+                    <h3 class="text-3xl font-black text-orange-500 tracking-tight">258 <span class="text-lg font-normal text-slate-400">Watts</span></h3>
                 </div>
                 <div class="text-slate-700 text-4xl font-bold">⚡</div>
             </div>
 
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex items-center justify-between shadow-xl">
                 <div>
-                    <p class="text-sm text-slate-400 font-medium mb-1">Frequência Cardíaca (FTHR)</p>
+                    <p class="text-sm text-slate-400 font-medium mb-1">Frequência Cardíaca Limiar (FTHR)</p>
                     <h3 class="text-3xl font-black text-rose-500 tracking-tight">167 <span class="text-lg font-normal text-slate-400">bpm</span></h3>
                 </div>
                 <div class="text-slate-700 text-4xl font-bold">❤️</div>
@@ -101,7 +101,7 @@ app.post('/api/webhook', (req, res) => {
   res.status(200).send('EVENT_RECEIVED');
 });
 
-// DIZ PARA A PÁGINA INICIAL MANDAR O SCRIPT DA TELA BONITA DIRETO
+// PÁGINA INICIAL
 app.get('/', (req, res) => {
   res.send(htmlPagina);
 });
