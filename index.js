@@ -1,4 +1,5 @@
 const express = require('express');
+const http = require('https'); // Usando módulo nativo e super compatível para a API
 const { Redis } = require('@upstash/redis');
 const app = express();
 app.use(express.json());
@@ -55,44 +56,4 @@ const gerarHtml = (dadosTreino) => `
         <section class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex items-center justify-between shadow-xl">
                 <div>
-                    <p class="text-sm text-slate-400 font-medium mb-1">Limiar de Potência (FTP)</p>
-                    <h3 class="text-3xl font-black text-orange-500 tracking-tight">258 <span class="text-lg font-normal text-slate-400">Watts</span></h3>
-                </div>
-                <div class="text-slate-700 text-4xl font-bold">⚡</div>
-            </div>
-
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex items-center justify-between shadow-xl">
-                <div>
-                    <p class="text-sm text-slate-400 font-medium mb-1">Frequência Cardíaca Limiar (FTHR)</p>
-                    <h3 class="text-3xl font-black text-rose-500 tracking-tight">167 <span class="text-lg font-normal text-slate-400">bpm</span></h3>
-                </div>
-                <div class="text-slate-700 text-4xl font-bold">❤️</div>
-            </div>
-        </section>
-
-        <section class="space-y-4">
-            <h2 class="text-xl font-bold tracking-tight">Gráfico de Carga e Fadiga (Intervals.icu)</h2>
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl overflow-hidden flex justify-center items-center min-h-[250px]">
-                <img src="/api/intervals-chart" alt="Gráfico de Fadiga" class="w-full h-auto rounded-xl max-h-[400px] object-contain">
-            </div>
-        </section>
-
-        <section class="space-y-4">
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-bold tracking-tight">Última Atividade Recebida</h2>
-                <span class="text-xs text-slate-500">Atualizado agora mesmo</span>
-            </div>
-
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
-                <div>
-                    <span class="bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2.5 py-0.5 rounded-md text-xs font-semibold uppercase tracking-wider mb-2 inline-block">
-                        ${dadosTreino ? dadosTreino.statusEsporte : 'Aguardando Treino'}
-                    </span>
-                    <h4 class="text-base font-bold text-slate-200">${dadosTreino ? 'Resumo do Exercício Coletado!' : 'Seu próximo treino aparecerá aqui'}</h4>
-                    <p class="text-xs text-slate-400 mt-1">${dadosTreino ? 'Dados vindos diretamente da API do Strava.' : 'O circuito com o Strava já está pronto para receber treinos de bike ou academia.'}</p>
-                </div>
-                
-                <div class="grid grid-cols-3 gap-4 text-center">
-                    <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800/40">
-                        <p class="text-xs text-slate-500">Distância / Registros</p>
-                        <p class="text-sm font-bold text-slate-200 mt-0.5">${dadosTreino ? dadosTreino.distancia : '--'}</
+                    <p class="text-sm
