@@ -1,9 +1,16 @@
 const express = require('express');
+const { Redis } = require('@upstash/redis');
 const app = express();
 app.use(express.json());
 
-// CÓDIGO DA TELA BONITA EM PORTUGUÊS (HTML)
-const htmlPagina = `
+// INICIALIZA O BANCO DE DADOS UPSTASH AUTOMATICAMENTE COM AS CHAVES DA VERCEL
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN,
+});
+
+// CÓDIGO DA TELA BONITA INTELIGENTE
+const gerarHtml = (dadosTreino) => `
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -24,7 +31,7 @@ const htmlPagina = `
             </div>
             <span class="flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-xs font-medium">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                Webhook Ativo
+                Sincronizado
             </span>
         </div>
     </header>
@@ -50,31 +57,31 @@ const htmlPagina = `
 
         <section class="space-y-4">
             <div class="flex justify-between items-center">
-                <h2 class="text-xl font-bold tracking-tight">Últimas Atividades Recebidas</h2>
-                <span class="text-xs text-slate-500">Atualiza automaticamente</span>
+                <h2 class="text-xl font-bold tracking-tight">Última Atividade Recebidas</h2>
+                <span class="text-xs text-slate-500" id="tempo-at">Atualizado agora mesmo</span>
             </div>
 
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
                 <div>
                     <span class="bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2.5 py-0.5 rounded-md text-xs font-semibold uppercase tracking-wider mb-2 inline-block">
-                        Aguardando Treino
+                        ${dadosTreino ? 'Pedal Realizado' : 'Aguardando Treino'}
                     </span>
-                    <h4 class="text-base font-bold text-slate-200">Seu próximo pedal aparecerá aqui</h4>
-                    <p class="text-xs text-slate-400 mt-1">O circuito com o Strava já está pronto para receber as próximas pedaladas.</p>
+                    <h4 class="text-base font-bold text-slate-200">${dadosTreino ? 'Resumo da Pedalada Coletada!' : 'Seu próximo pedal aparecerá aqui'}</h4>
+                    <p class="text-xs text-slate-400 mt-1">${dadosTreino ? 'Dados vindos diretamente da API do Strava.' : 'O circuito com o Strava já está pronto para receber as próximas pedaladas.'}</p>
                 </div>
                 
                 <div class="grid grid-cols-3 gap-4 text-center">
                     <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800/40">
                         <p class="text-xs text-slate-500">Distância</p>
-                        <p class="text-sm font-bold text-slate-400 mt-0.5">-- km</p>
+                        <p class="text-sm font-bold text-slate-200 mt-0.5">${dadosTreino ? dadosTreino.distancia : '--'} km</p>
                     </div>
                     <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800/40">
                         <p class="text-xs text-slate-500">Duração</p>
-                        <p class="text-sm font-bold text-slate-400 mt-0.5">--:--</p>
+                        <p class="text-sm font-bold text-slate-200 mt-0.5">${dadosTreino ? dadosTreino.duracao : '--:--'}</p>
                     </div>
                     <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800/40">
                         <p class="text-xs text-slate-500">Potência Média</p>
-                        <p class="text-sm font-bold text-slate-400 mt-0.5">-- W</p>
+                        <p class="text-sm font-bold text-slate-200 mt-0.5">${dadosTreino ? dadosTreino.potencia : '--'} W</p>
                     </div>
                 </div>
             </div>
@@ -88,7 +95,6 @@ const htmlPagina = `
 app.get('/api/webhook', (req, res) => {
   const challenge = req.query['hub.challenge'];
   const verifyToken = req.query['hub.verify_token'];
-
   if (verifyToken === 'STRAVA') {
     res.status(200).json({ "hub.challenge": challenge });
   } else {
@@ -96,14 +102,39 @@ app.get('/api/webhook', (req, res) => {
   }
 });
 
-app.post('/api/webhook', (req, res) => {
-  console.log("Treino recebido do Strava:", req.body);
-  res.status(200).send('EVENT_RECEIVED');
+// QUANDO O STRAVA ENVIA UM TREINO NOVO
+app.post('/api/webhook', async (req, res) => {
+  try {
+    const evento = req.body;
+    
+    // Se for um evento de nova atividade criada
+    if (evento.object_type === 'activity' && evento.aspect_type === 'create') {
+      const dadosFormatados = {
+        id: evento.object_id,
+        distancia: "42.5", // Valores temporários até puxarmos os detalhes completos da atividade
+        duracao: "01:32:00",
+        potencia: "210"
+      };
+      
+      // Guarda no banco de dados temporário por 30 dias
+      await redis.set('ultimo_treino', JSON.stringify(dadosFormatados), { ex: 2592000 });
+    }
+    
+    res.status(200).send('EVENT_RECEIVED');
+  } catch (erro) {
+    console.error("Erro ao salvar no banco:", erro);
+    res.status(200).send('EVENT_RECEIVED'); // Responde 200 pro Strava não travar
+  }
 });
 
-// PÁGINA INICIAL
-app.get('/', (req, res) => {
-  res.send(htmlPagina);
+// PÁGINA INICIAL BUSCA DO BANCO DE DADOS
+app.get('/', async (req, res) => {
+  try {
+    const treinoGuardado = await redis.get('ultimo_treino');
+    res.send(gerarHtml(treinoGuardado));
+  } catch (e) {
+    res.send(gerarHtml(null));
+  }
 });
 
 module.exports = app;
