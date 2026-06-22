@@ -70,10 +70,10 @@ const gerarHtml = (dadosTreino) => `
             </div>
         </section>
 
-        <section class="space-y-4">
+       <section class="space-y-4">
             <h2 class="text-xl font-bold tracking-tight">Gráfico de Carga e Fadiga (Intervals.icu)</h2>
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl overflow-hidden flex justify-center items-center min-h-[250px]">
-                <img src="/api/intervals-chart" alt="Gráfico de Fadiga" class="w-full h-auto rounded-xl max-h-[400px] object-contain" onerror="this.onerror=null; this.parentNode.innerHTML='<p class=\"text-sm text-slate-500 p-8 text-center\">Carregando ou aguardando credenciais do Intervals.icu...</p>';">
+                <img src="/api/intervals-chart" alt="Gráfico de Fadiga" class="w-full h-auto rounded-xl max-h-[400px] object-contain">
             </div>
         </section>
 
