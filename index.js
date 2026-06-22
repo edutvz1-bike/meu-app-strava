@@ -1,8 +1,12 @@
 const express = require('express');
+const path = require('path');
 const app = express();
 app.use(express.json());
 
-// O APERTO DE MÃO DO STRAVA
+// CONFIGURA A PASTA DA TELA BONITA
+app.use(express.static(path.join(__dirname, 'public')));
+
+// ROTA DO STRAVA (WEBHOOK)
 app.get('/api/webhook', (req, res) => {
   const challenge = req.query['hub.challenge'];
   const verifyToken = req.query['hub.verify_token'];
@@ -14,13 +18,16 @@ app.get('/api/webhook', (req, res) => {
   }
 });
 
-// RECEBEDOR DE TREINOS
 app.post('/api/webhook', (req, res) => {
-  console.log("Treino recebido:", req.body);
+  console.log("Treino recebido do Strava:", req.body);
   res.status(200).send('EVENT_RECEIVED');
 });
 
-// Executa o servidor na Vercel
+// DIZ PARA A PÁGINA INICIAL MOSTRAR O INDEX.HTML
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 module.exports = app;
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Rodando na porta ${PORT}`));
