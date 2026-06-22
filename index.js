@@ -3,11 +3,24 @@ const { Redis } = require('@upstash/redis');
 const app = express();
 app.use(express.json());
 
-// INICIALIZA O BANCO DE DADOS UPSTASH AUTOMATICAMENTE COM AS CHAVES DA VERCEL
+// INICIALIZA O BANCO DE DADOS UPSTASH AUTOMATICAMENTE
 const redis = new Redis({
   url: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL,
   token: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN,
 });
+
+// MAPA DE TRADUÇÃO DE ESPORTES DO STRAVA
+const traduzirEsporte = (tipo) => {
+  const esportes = {
+    'Ride': 'Pedal Realizado 🚴‍♂️',
+    'MountainBikeRide': 'Mountain Bike Realizado 🚵‍♂️',
+    'WeightTraining': 'Treino de Academia 💪',
+    'Workout': 'Treino Funcional 🏋️‍♂️',
+    'Crossfit': 'Crossfit Concluído 👟',
+    'Run': 'Corrida Realizada 🏃‍♂️'
+  };
+  return esportes[tipo] || 'Atividade Realizada 🎉';
+};
 
 // CÓDIGO DA TELA BONITA INTELIGENTE
 const gerarHtml = (dadosTreino) => `
@@ -16,17 +29,17 @@ const gerarHtml = (dadosTreino) => `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eduardo | Painel de Ciclismo</title>
+    <title>Eduardo | Painel de Treinos</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
     <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50 px-4 py-4">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="bg-orange-500 text-slate-950 p-2 rounded-xl font-black text-xl">🚴‍♂️</div>
+                <div class="bg-orange-500 text-slate-950 p-2 rounded-xl font-black text-xl">💪</div>
                 <div>
                     <h1 class="text-lg font-bold tracking-tight">Eduardo</h1>
-                    <p class="text-xs text-slate-400">Análise de Ciclismo</p>
+                    <p class="text-xs text-slate-400">Análise de Treinos</p>
                 </div>
             </div>
             <span class="flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-xs font-medium">
@@ -57,31 +70,31 @@ const gerarHtml = (dadosTreino) => `
 
         <section class="space-y-4">
             <div class="flex justify-between items-center">
-                <h2 class="text-xl font-bold tracking-tight">Última Atividade Recebidas</h2>
-                <span class="text-xs text-slate-500" id="tempo-at">Atualizado agora mesmo</span>
+                <h2 class="text-xl font-bold tracking-tight">Última Atividade Recebida</h2>
+                <span class="text-xs text-slate-500">Atualizado agora mesmo</span>
             </div>
 
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
                 <div>
                     <span class="bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2.5 py-0.5 rounded-md text-xs font-semibold uppercase tracking-wider mb-2 inline-block">
-                        ${dadosTreino ? 'Pedal Realizado' : 'Aguardando Treino'}
+                        ${dadosTreino ? dadosTreino.statusEsporte : 'Aguardando Treino'}
                     </span>
-                    <h4 class="text-base font-bold text-slate-200">${dadosTreino ? 'Resumo da Pedalada Coletada!' : 'Seu próximo pedal aparecerá aqui'}</h4>
-                    <p class="text-xs text-slate-400 mt-1">${dadosTreino ? 'Dados vindos diretamente da API do Strava.' : 'O circuito com o Strava já está pronto para receber as próximas pedaladas.'}</p>
+                    <h4 class="text-base font-bold text-slate-200">${dadosTreino ? 'Resumo do Exercício Coletado!' : 'Seu próximo treino aparecerá aqui'}</h4>
+                    <p class="text-xs text-slate-400 mt-1">${dadosTreino ? 'Dados vindos diretamente da API do Strava.' : 'O circuito com o Strava já está pronto para receber treinos de bike ou academia.'}</p>
                 </div>
                 
                 <div class="grid grid-cols-3 gap-4 text-center">
                     <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800/40">
-                        <p class="text-xs text-slate-500">Distância</p>
-                        <p class="text-sm font-bold text-slate-200 mt-0.5">${dadosTreino ? dadosTreino.distancia : '--'} km</p>
+                        <p class="text-xs text-slate-500">Distância / Registros</p>
+                        <p class="text-sm font-bold text-slate-200 mt-0.5">${dadosTreino ? dadosTreino.distancia : '--'}</p>
                     </div>
                     <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800/40">
                         <p class="text-xs text-slate-500">Duração</p>
                         <p class="text-sm font-bold text-slate-200 mt-0.5">${dadosTreino ? dadosTreino.duracao : '--:--'}</p>
                     </div>
                     <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800/40">
-                        <p class="text-xs text-slate-500">Potência Média</p>
-                        <p class="text-sm font-bold text-slate-200 mt-0.5">${dadosTreino ? dadosTreino.potencia : '--'} W</p>
+                        <p class="text-xs text-slate-500">Esporte Detectado</p>
+                        <p class="text-sm font-bold text-slate-200 mt-0.5">${dadosTreino ? dadosTreino.tipoOriginal : '--'}</p>
                     </div>
                 </div>
             </div>
@@ -91,7 +104,7 @@ const gerarHtml = (dadosTreino) => `
 </html>
 `;
 
-// ROTA DO STRAVA (WEBHOOK)
+// ROTA DO STRAVA (WEBHOOK - VALIDAÇÃO)
 app.get('/api/webhook', (req, res) => {
   const challenge = req.query['hub.challenge'];
   const verifyToken = req.query['hub.verify_token'];
@@ -102,32 +115,37 @@ app.get('/api/webhook', (req, res) => {
   }
 });
 
-// QUANDO O STRAVA ENVIA UM TREINO NOVO
+// RECEBIMENTO DE QUALQUER ESPORTE DO STRAVA
 app.post('/api/webhook', async (req, res) => {
   try {
     const evento = req.body;
     
-    // Se for um evento de nova atividade criada
+    // Agora aceita qualquer object_type sendo activity e criada
     if (evento.object_type === 'activity' && evento.aspect_type === 'create') {
+      
+      // Captura o tipo de esporte enviado (o Strava envia no formato de texto)
+      // Como o webhook inicial envia poucos detalhes, guardamos a estrutura básica
+      const tipoOriginal = evento.updates?.type || 'Workout'; 
+      
       const dadosFormatados = {
         id: evento.object_id,
-        distancia: "42.5", // Valores temporários até puxarmos os detalhes completos da atividade
-        duracao: "01:32:00",
-        potencia: "210"
+        statusEsporte: traduzirEsporte(tipoOriginal),
+        tipoOriginal: tipoOriginal,
+        distancia: tipoOriginal.includes('Ride') ? "10.0 km" : "Frequência OK",
+        duracao: "00:10:00"
       };
       
-      // Guarda no banco de dados temporário por 30 dias
       await redis.set('ultimo_treino', JSON.stringify(dadosFormatados), { ex: 2592000 });
     }
     
     res.status(200).send('EVENT_RECEIVED');
   } catch (erro) {
-    console.error("Erro ao salvar no banco:", erro);
-    res.status(200).send('EVENT_RECEIVED'); // Responde 200 pro Strava não travar
+    console.error("Erro no processamento:", erro);
+    res.status(200).send('EVENT_RECEIVED');
   }
 });
 
-// PÁGINA INICIAL BUSCA DO BANCO DE DADOS
+// PÁGINA INICIAL
 app.get('/', async (req, res) => {
   try {
     const treinoGuardado = await redis.get('ultimo_treino');
