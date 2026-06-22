@@ -3,7 +3,7 @@ const { Redis } = require('@upstash/redis');
 const app = express();
 app.use(express.json());
 
-// INICIALIZA O BANCO COM PROTEÇÃO CASO AS CHAVES NÃO EXISTAM AINDA
+// INICIALIZA O BANCO COM MAPA DE CHAVES SECA
 let redis;
 try {
   redis = new Redis({
@@ -11,10 +11,9 @@ try {
     token: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '',
   });
 } catch (e) {
-  console.error("Erro ao inicializar o Redis:", e);
+  console.error("Erro Redis:", e);
 }
 
-// MAPA DE TRADUÇÃO DE ESPORTES DO STRAVA
 const traduzirEsporte = (tipo) => {
   const esportes = {
     'Ride': 'Pedal Realizado 🚴‍♂️',
@@ -27,7 +26,6 @@ const traduzirEsporte = (tipo) => {
   return esportes[tipo] || 'Atividade Realizada 🎉';
 };
 
-// CÓDIGO DA TELA BONITA INTELIGENTE (COM PROTEÇÃO SE DADOS FOR NULO)
 const gerarHtml = (dadosTreino) => `
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -109,25 +107,20 @@ const gerarHtml = (dadosTreino) => `
 </html>
 `;
 
-// ROTA DO STRAVA (WEBHOOK - VALIDAÇÃO)
 app.get('/api/webhook', (req, res) => {
   const challenge = req.query['hub.challenge'];
   const verifyToken = req.query['hub.verify_token'];
   if (verifyToken === 'STRAVA') {
-    res.status(200).json({ "hub.challenge": challenge });
-  } else {
-    res.status(403).send('Token inválido');
+    return res.status(200).json({ "hub.challenge": challenge });
   }
+  return res.status(403).send('Token inválido');
 });
 
-// RECEBIMENTO DE QUALQUER ESPORTE DO STRAVA
 app.post('/api/webhook', async (req, res) => {
   try {
     const evento = req.body;
-    
     if (evento.object_type === 'activity' && evento.aspect_type === 'create') {
       const tipoOriginal = evento.updates?.type || 'Workout'; 
-      
       const dadosFormatados = {
         id: evento.object_id,
         statusEsporte: traduzirEsporte(tipoOriginal),
@@ -135,37 +128,30 @@ app.post('/api/webhook', async (req, res) => {
         distancia: tipoOriginal.includes('Ride') ? "10.0 km" : "Frequência OK",
         duracao: "00:10:00"
       };
-      
       if (redis) {
         await redis.set('ultimo_treino', JSON.stringify(dadosFormatados), { ex: 2592000 });
       }
     }
-    
-    res.status(200).send('EVENT_RECEIVED');
+    return res.status(200).send('EVENT_RECEIVED');
   } catch (erro) {
-    console.error("Erro no processamento do webhook:", erro);
-    res.status(200).send('EVENT_RECEIVED');
+    return res.status(200).send('EVENT_RECEIVED');
   }
 });
 
-// PÁGINA INICIAL COM TRATAMENTO DE ERROS RIGOROSO
 app.get('/', async (req, res) => {
   try {
     if (redis) {
       const treinoGuardado = await redis.get('ultimo_treino');
-      // Garante que se o retorno for string vazia ou nulo, não quebre o JSON.parse interno
       if (treinoGuardado) {
         const dados = typeof treinoGuardado === 'string' ? JSON.parse(treinoGuardado) : treinoGuardado;
         return res.send(gerarHtml(dados));
       }
     }
-    res.send(gerarHtml(null));
+    return res.send(gerarHtml(null));
   } catch (e) {
-    console.error("Erro ao ler do banco, carregando interface limpa:", e);
-    res.send(gerarHtml(null));
+    return res.send(gerarHtml(null));
   }
 });
 
+// COMPATIBILIDADE COM VERCEL SERVERLESS
 module.exports = app;
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Rodando na porta ${PORT}`));
