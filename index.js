@@ -3,7 +3,6 @@ const { Redis } = require('@upstash/redis');
 const app = express();
 app.use(express.json());
 
-// INICIALIZA O BANCO COM MAPA DE CHAVES SECA
 let redis;
 try {
   redis = new Redis({
@@ -57,7 +56,7 @@ const gerarHtml = (dadosTreino) => `
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex items-center justify-between shadow-xl">
                 <div>
                     <p class="text-sm text-slate-400 font-medium mb-1">Limiar de Potência (FTP)</p>
-                    <h3 class="text-3xl font-black text-orange-500 tracking-tight">275 <span class="text-lg font-normal text-slate-400">Watts</span></h3>
+                    <h3 class="text-3xl font-black text-orange-500 tracking-tight">258 <span class="text-lg font-normal text-slate-400">Watts</span></h3>
                 </div>
                 <div class="text-slate-700 text-4xl font-bold">⚡</div>
             </div>
@@ -68,6 +67,13 @@ const gerarHtml = (dadosTreino) => `
                     <h3 class="text-3xl font-black text-rose-500 tracking-tight">167 <span class="text-lg font-normal text-slate-400">bpm</span></h3>
                 </div>
                 <div class="text-slate-700 text-4xl font-bold">❤️</div>
+            </div>
+        </section>
+
+        <section class="space-y-4">
+            <h2 class="text-xl font-bold tracking-tight">Gráfico de Carga e Fadiga (Intervals.icu)</h2>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl overflow-hidden flex justify-center items-center min-h-[250px]">
+                <img src="/api/intervals-chart" alt="Gráfico de Fadiga" class="w-full h-auto rounded-xl max-h-[400px] object-contain" onerror="this.onerror=null; this.parentNode.innerHTML='<p class=\"text-sm text-slate-500 p-8 text-center\">Carregando ou aguardando credenciais do Intervals.icu...</p>';">
             </div>
         </section>
 
@@ -138,6 +144,34 @@ app.post('/api/webhook', async (req, res) => {
   }
 });
 
+// BUSCA O GRÁFICO DIRETAMENTE NA API DO INTERVALS.ICU
+app.get('/api/intervals-chart', async (req, res) => {
+  try {
+    const userId = process.env.INTERVALS_USER_ID;
+    const apiKey = process.env.INTERVALS_API_KEY;
+
+    if (!userId || !apiKey) {
+      return res.status(400).send('Chaves ausentes.');
+    }
+
+    const auth = Buffer.from(`API_KEY:${apiKey}`).toString('base64');
+    const urlIntervals = `https://intervals.icu/api/v1/athlete/${userId}/fitness-chart.png?days=90&theme=dark`;
+
+    const resposta = await fetch(urlIntervals, {
+      headers: { 'Authorization': `Basic ${auth}` }
+    });
+
+    if (!resposta.ok) throw new Error('Erro na API do Intervals');
+
+    const blob = await resposta.arrayBuffer();
+    res.setHeader('Content-Type', 'image/png');
+    return res.send(Buffer.from(blob));
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send('Erro ao carregar o gráfico.');
+  }
+});
+
 app.get('/', async (req, res) => {
   try {
     if (redis) {
@@ -153,5 +187,4 @@ app.get('/', async (req, res) => {
   }
 });
 
-// COMPATIBILIDADE COM VERCEL SERVERLESS
 module.exports = app;
